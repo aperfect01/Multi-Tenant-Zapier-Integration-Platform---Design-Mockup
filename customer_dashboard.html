@@ -1,0 +1,981 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customer Integration Management</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .header-left h1 {
+            font-size: 2.2rem;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+
+        .customer-selector {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .customer-selector select {
+            padding: 12px 20px;
+            border: 2px solid #e0e6ed;
+            border-radius: 12px;
+            font-size: 1rem;
+            background: white;
+            min-width: 200px;
+            transition: all 0.3s ease;
+        }
+
+        .customer-selector select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .customer-info {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 12px;
+            font-weight: 600;
+        }
+
+        .stats-bar {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 25px;
+            text-align: center;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .stat-number.enabled {
+            color: #27ae60;
+        }
+
+        .stat-number.disabled {
+            color: #e74c3c;
+        }
+
+        .stat-number.total {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .stat-label {
+            color: #666;
+            font-weight: 500;
+        }
+
+        .controls-section {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+
+        .controls-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .search-filter {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			flex-wrap: wrap;
+			width: 100%;
+			gap: 15px;
+		}
+
+
+        .search-box {
+            position: relative;
+			flex: 1;
+        }
+
+        .search-box input {
+            padding: 12px 20px 12px 45px;
+            border: 2px solid #e0e6ed;
+            border-radius: 25px;
+            font-size: 1rem;
+            width: 100%;
+            transition: all 0.3s ease;
+        }
+
+        .search-box input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .search-box::before {
+            content: '🔍';
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 1.2rem;
+        }
+
+        .filter-select {
+            padding: 12px 20px;
+            border: 2px solid #e0e6ed;
+            border-radius: 12px;
+            font-size: 1rem;
+            background: white;
+            transition: all 0.3s ease;
+			flex-shrink: 0;
+			min-width: 180px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #764ba2, #667eea);
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: #f8f9fa;
+            color: #495057;
+            border: 2px solid #e0e6ed;
+        }
+
+        .btn-secondary:hover {
+            background: #e9ecef;
+            border-color: #ced4da;
+        }
+
+        .integrations-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 25px;
+        }
+
+        .integration-card {
+            background: rgba(255, 255, 255, 0.98);
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.08);
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+            position: relative;
+            overflow: hidden;
+			height: 350px;
+			display: flex;
+			flex-direction: column;
+			justify-content: space-between;
+        }
+		
+        .integration-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #ff6b6b, #4ecdc4, #45b7d1);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .integration-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 25px 50px rgba(0,0,0,0.15);
+            border-color: #667eea;
+        }
+
+        .integration-card:hover::before {
+            opacity: 1;
+        }
+
+        .integration-card.enabled {
+            border-color: #27ae60;
+        }
+
+        .integration-card.disabled {
+            opacity: 0.7;
+            border-color: #e0e6ed;
+        }
+
+        .integration-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 20px;
+        }
+
+        .integration-info h3 {
+            font-size: 1.4rem;
+            color: #2c3e50;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .integration-logo {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+
+        .integration-category {
+            background: #f8f9fa;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            color: #6c757d;
+            font-weight: 500;
+        }
+
+        .toggle-switch {
+            position: relative;
+            width: 60px;
+            height: 30px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 30px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 22px;
+            width: 22px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background: linear-gradient(135deg, #27ae60, #2ecc71);
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(30px);
+        }
+
+        .integration-details {
+            margin-bottom: 20px;
+        }
+
+        .integration-details p {
+            color: #666;
+            margin-bottom: 12px;
+            line-height: 1.5;
+        }
+
+        .feature-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+
+        .tag {
+            background: #e3f2fd;
+            color: #1976d2;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .integration-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .btn-small {
+            padding: 8px 16px;
+            font-size: 0.9rem;
+        }
+
+        .status-badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .status-enabled {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-disabled {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin-top: 40px;
+        }
+
+        .pagination button {
+            padding: 10px 15px;
+            border: 2px solid #e0e6ed;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .pagination button:hover {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .pagination button.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .pagination button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            background: #f8f9fa;
+            color: #6c757d;
+        }
+
+        .pagination button:disabled:hover {
+            background: #f8f9fa;
+            color: #6c757d;
+            border-color: #e0e6ed;
+            transform: none;
+        }
+
+        @media (max-width: 768px) {
+            .integrations-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .search-box input {
+                width: 100%;
+            }
+            
+            .controls-header {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .search-filter {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-left">
+                <h1>Integration Management Dashboard</h1>
+                <div class="customer-selector">
+                    <label for="customer-select">Customer:</label>
+                    <select id="customer-select" onchange="switchCustomer()">
+                        <option value="acme-corp">ACME Corporation</option>
+                        <option value="tech-startup">TechStartup Inc.</option>
+                        <option value="retail-giant">Retail Giant LLC</option>
+                        <option value="consulting-firm">Consulting Firm Pro</option>
+                    </select>
+                </div>
+            </div>
+            <div class="customer-info">
+                <div>Tenant ID: acme-corp-2024</div>
+                <div>Plan: Enterprise</div>
+            </div>
+        </div>
+
+        <div class="stats-bar">
+            <div class="stat-card">
+                <div class="stat-number enabled" id="enabled-count">47</div>
+                <div class="stat-label">Enabled Integrations</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number disabled" id="disabled-count">103</div>
+                <div class="stat-label">Disabled Integrations</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number total">150</div>
+                <div class="stat-label">Total Available</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" style="color: #f39c12;">12</div>
+                <div class="stat-label">Pending Setup</div>
+            </div>
+        </div>
+
+        <div class="controls-section">
+            <div class="controls-header">
+                <div class="search-filter">
+                    <div class="search-box">
+                        <input type="text" placeholder="Search integrations..." id="search-input" oninput="filterIntegrations()">
+                    </div>
+                    <select class="filter-select" id="category-filter" onchange="filterIntegrations()">
+                        <option value="">All Categories</option>
+                        <option value="crm">CRM</option>
+                        <option value="email">Email Marketing</option>
+                        <option value="ecommerce">E-commerce</option>
+                        <option value="productivity">Productivity</option>
+                        <option value="social">Social Media</option>
+                        <option value="storage">Cloud Storage</option>
+                    </select>
+                    <select class="filter-select" id="status-filter" onchange="filterIntegrations()">
+                        <option value="">All Status</option>
+                        <option value="enabled">Enabled Only</option>
+                        <option value="disabled">Disabled Only</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="integrations-grid" id="integrations-grid">
+            <!-- Integrations will be populated by JavaScript -->
+        </div>
+
+        <div class="pagination" id="pagination">
+            <!-- Pagination will be populated by JavaScript -->
+        </div>
+    </div>
+
+    <script>
+		const masterIntegrations = [
+			{ id: 1, name: 'Salesforce', category: 'crm', enabled: true, logo: 'SF', description: 'Sync contacts, leads, and opportunities with your CRM system.', features: ['Contacts', 'Leads', 'Opportunities', 'Custom Objects'] },
+			{ id: 2, name: 'HubSpot', category: 'crm', enabled: true, logo: 'HS', description: 'Manage marketing campaigns and customer relationships.', features: ['Contacts', 'Deals', 'Marketing', 'Analytics'] },
+			{ id: 3, name: 'Mailchimp', category: 'email', enabled: false, logo: 'MC', description: 'Email marketing automation and campaign management.', features: ['Campaigns', 'Lists', 'Templates', 'Analytics'] },
+			{ id: 4, name: 'Slack', category: 'productivity', enabled: true, logo: 'SL', description: 'Team communication and workflow notifications.', features: ['Messages', 'Channels', 'Files', 'Workflows'] },
+			{ id: 5, name: 'Shopify', category: 'ecommerce', enabled: true, logo: 'SH', description: 'E-commerce platform integration for orders and inventory.', features: ['Orders', 'Products', 'Customers', 'Inventory'] },
+			{ id: 6, name: 'Google Sheets', category: 'productivity', enabled: false, logo: 'GS', description: 'Spreadsheet data synchronization and automation.', features: ['Rows', 'Worksheets', 'Charts', 'Formulas'] },
+			{ id: 7, name: 'Stripe', category: 'ecommerce', enabled: true, logo: 'ST', description: 'Payment processing and subscription management.', features: ['Payments', 'Subscriptions', 'Customers', 'Analytics'] },
+			{ id: 8, name: 'Trello', category: 'productivity', enabled: false, logo: 'TR', description: 'Project management and task organization.', features: ['Boards', 'Cards', 'Lists', 'Members'] },
+			{ id: 9, name: 'Gmail', category: 'email', enabled: true, logo: 'GM', description: 'Email automation and message management.', features: ['Send Email', 'Labels', 'Threads', 'Attachments'] },
+			{ id: 10, name: 'Dropbox', category: 'storage', enabled: false, logo: 'DB', description: 'File storage and sharing automation.', features: ['Files', 'Folders', 'Sharing', 'Sync'] },
+			{ id: 11, name: 'Facebook', category: 'social', enabled: true, logo: 'FB', description: 'Social media marketing and post management.', features: ['Posts', 'Pages', 'Ads', 'Analytics'] },
+			{ id: 12, name: 'Twitter', category: 'social', enabled: false, logo: 'TW', description: 'Tweet automation and social listening.', features: ['Tweets', 'DMs', 'Lists', 'Analytics'] },
+			{ id: 13, name: 'Zoom', category: 'communication', enabled: true, logo: 'ZM', description: 'Video conferencing and meeting automation.', features: ['Meetings', 'Webinars', 'Recordings', 'Participants'] },
+			{ id: 14, name: 'Microsoft Teams', category: 'communication', enabled: false, logo: 'MT', description: 'Team collaboration and video meetings.', features: ['Teams', 'Channels', 'Meetings', 'Files'] },
+			{ id: 15, name: 'Asana', category: 'productivity', enabled: true, logo: 'AS', description: 'Project management and team collaboration.', features: ['Tasks', 'Projects', 'Teams', 'Goals'] },
+			{ id: 16, name: 'Jira', category: 'productivity', enabled: false, logo: 'JR', description: 'Issue tracking and agile project management.', features: ['Issues', 'Projects', 'Boards', 'Reports'] },
+			{ id: 17, name: 'GitHub', category: 'development', enabled: true, logo: 'GH', description: 'Code repository management and CI/CD automation.', features: ['Repositories', 'Issues', 'Pull Requests', 'Actions'] },
+			{ id: 18, name: 'GitLab', category: 'development', enabled: false, logo: 'GL', description: 'DevOps platform with Git repository management.', features: ['Projects', 'Merge Requests', 'CI/CD', 'Issues'] },
+			{ id: 19, name: 'Notion', category: 'productivity', enabled: true, logo: 'NT', description: 'All-in-one workspace for notes and project management.', features: ['Pages', 'Databases', 'Templates', 'Blocks'] },
+			{ id: 20, name: 'Airtable', category: 'database', enabled: false, logo: 'AT', description: 'Cloud-based database and spreadsheet hybrid.', features: ['Tables', 'Records', 'Views', 'Forms'] },
+			{ id: 21, name: 'Monday.com', category: 'productivity', enabled: true, logo: 'MN', description: 'Work operating system for team management.', features: ['Boards', 'Items', 'Updates', 'Automations'] },
+			{ id: 22, name: 'Zendesk', category: 'support', enabled: false, logo: 'ZD', description: 'Customer service and support ticket management.', features: ['Tickets', 'Users', 'Organizations', 'Satisfaction'] },
+			{ id: 23, name: 'Intercom', category: 'support', enabled: true, logo: 'IC', description: 'Customer messaging and support automation.', features: ['Messages', 'Users', 'Conversations', 'Bots'] },
+			{ id: 24, name: 'Discord', category: 'communication', enabled: false, logo: 'DC', description: 'Community chat and voice communication.', features: ['Servers', 'Channels', 'Messages', 'Voice'] },
+			{ id: 25, name: 'LinkedIn', category: 'social', enabled: true, logo: 'LI', description: 'Professional networking and content sharing.', features: ['Posts', 'Connections', 'Companies', 'Messages'] },
+			{ id: 26, name: 'Instagram', category: 'social', enabled: false, logo: 'IG', description: 'Visual content sharing and marketing.', features: ['Posts', 'Stories', 'Reels', 'Analytics'] },
+			{ id: 27, name: 'YouTube', category: 'social', enabled: true, logo: 'YT', description: 'Video content management and analytics.', features: ['Videos', 'Channels', 'Playlists', 'Comments'] },
+			{ id: 28, name: 'TikTok', category: 'social', enabled: false, logo: 'TT', description: 'Short-form video content and marketing.', features: ['Videos', 'Users', 'Hashtags', 'Analytics'] },
+			{ id: 29, name: 'WhatsApp', category: 'communication', enabled: true, logo: 'WA', description: 'Messaging automation and customer support.', features: ['Messages', 'Contacts', 'Groups', 'Media'] },
+			{ id: 30, name: 'Telegram', category: 'communication', enabled: false, logo: 'TG', description: 'Secure messaging and bot automation.', features: ['Messages', 'Channels', 'Bots', 'Files'] },
+			{ id: 31, name: 'PayPal', category: 'ecommerce', enabled: true, logo: 'PP', description: 'Online payment processing and money transfers.', features: ['Payments', 'Invoices', 'Subscriptions', 'Disputes'] },
+			{ id: 32, name: 'Square', category: 'ecommerce', enabled: false, logo: 'SQ', description: 'Point of sale and payment processing.', features: ['Payments', 'Items', 'Orders', 'Customers'] },
+			{ id: 33, name: 'WooCommerce', category: 'ecommerce', enabled: true, logo: 'WC', description: 'WordPress e-commerce plugin integration.', features: ['Products', 'Orders', 'Customers', 'Coupons'] },
+			{ id: 34, name: 'Magento', category: 'ecommerce', enabled: false, logo: 'MG', description: 'Enterprise e-commerce platform.', features: ['Products', 'Categories', 'Orders', 'Customers'] },
+			{ id: 35, name: 'BigCommerce', category: 'ecommerce', enabled: true, logo: 'BC', description: 'Cloud-based e-commerce platform.', features: ['Products', 'Orders', 'Customers', 'Analytics'] },
+			{ id: 36, name: 'Google Drive', category: 'storage', enabled: false, logo: 'GD', description: 'Cloud file storage and collaboration.', features: ['Files', 'Folders', 'Sharing', 'Comments'] },
+			{ id: 37, name: 'OneDrive', category: 'storage', enabled: true, logo: 'OD', description: 'Microsoft cloud storage solution.', features: ['Files', 'Folders', 'Sharing', 'Sync'] },
+			{ id: 38, name: 'Box', category: 'storage', enabled: false, logo: 'BX', description: 'Enterprise cloud content management.', features: ['Files', 'Folders', 'Collaboration', 'Security'] },
+			{ id: 39, name: 'AWS S3', category: 'storage', enabled: true, logo: 'S3', description: 'Amazon cloud object storage service.', features: ['Buckets', 'Objects', 'Permissions', 'Lifecycle'] },
+			{ id: 40, name: 'Google Analytics', category: 'analytics', enabled: false, logo: 'GA', description: 'Web analytics and traffic measurement.', features: ['Sessions', 'Users', 'Events', 'Goals'] },
+			{ id: 41, name: 'Mixpanel', category: 'analytics', enabled: true, logo: 'MP', description: 'Product analytics and user behavior tracking.', features: ['Events', 'Users', 'Funnels', 'Cohorts'] },
+			{ id: 42, name: 'Amplitude', category: 'analytics', enabled: false, logo: 'AM', description: 'Digital analytics and product intelligence.', features: ['Events', 'Users', 'Charts', 'Cohorts'] },
+			{ id: 43, name: 'Hotjar', category: 'analytics', enabled: true, logo: 'HJ', description: 'Website heatmaps and user session recordings.', features: ['Heatmaps', 'Recordings', 'Surveys', 'Feedback'] },
+			{ id: 44, name: 'Tableau', category: 'analytics', enabled: false, logo: 'TB', description: 'Business intelligence and data visualization.', features: ['Workbooks', 'Datasources', 'Views', 'Users'] },
+			{ id: 45, name: 'Power BI', category: 'analytics', enabled: true, logo: 'PB', description: 'Microsoft business analytics solution.', features: ['Reports', 'Dashboards', 'Datasets', 'Workspaces'] },
+			{ id: 46, name: 'Looker', category: 'analytics', enabled: false, logo: 'LK', description: 'Modern business intelligence platform.', features: ['Looks', 'Dashboards', 'Explores', 'Models'] },
+			{ id: 47, name: 'Segment', category: 'analytics', enabled: true, logo: 'SG', description: 'Customer data platform and analytics.', features: ['Sources', 'Destinations', 'Personas', 'Protocols'] },
+			{ id: 48, name: 'Twilio', category: 'communication', enabled: false, logo: 'TL', description: 'SMS, voice, and communication APIs.', features: ['Messages', 'Calls', 'Conferences', 'Recordings'] },
+			{ id: 49, name: 'SendGrid', category: 'email', enabled: true, logo: 'SG', description: 'Email delivery and marketing platform.', features: ['Emails', 'Templates', 'Lists', 'Statistics'] },
+			{ id: 50, name: 'Mailgun', category: 'email', enabled: false, logo: 'MG', description: 'Transactional email API service.', features: ['Messages', 'Domains', 'Routes', 'Stats'] },
+			{ id: 51, name: 'ConvertKit', category: 'email', enabled: true, logo: 'CK', description: 'Email marketing for creators and bloggers.', features: ['Subscribers', 'Sequences', 'Forms', 'Tags'] },
+			{ id: 52, name: 'ActiveCampaign', category: 'email', enabled: false, logo: 'AC', description: 'Email marketing automation and CRM.', features: ['Contacts', 'Campaigns', 'Automations', 'Deals'] },
+			{ id: 53, name: 'Constant Contact', category: 'email', enabled: true, logo: 'CC', description: 'Email marketing and online survey tools.', features: ['Campaigns', 'Lists', 'Events', 'Surveys'] },
+			{ id: 54, name: 'Campaign Monitor', category: 'email', enabled: false, logo: 'CM', description: 'Email marketing and automation platform.', features: ['Campaigns', 'Lists', 'Automations', 'Templates'] },
+			{ id: 55, name: 'Pipedrive', category: 'crm', enabled: true, logo: 'PD', description: 'Sales-focused CRM and pipeline management.', features: ['Deals', 'Contacts', 'Organizations', 'Activities'] },
+			{ id: 56, name: 'Zoho CRM', category: 'crm', enabled: false, logo: 'ZC', description: 'Comprehensive customer relationship management.', features: ['Leads', 'Contacts', 'Deals', 'Accounts'] },
+			{ id: 57, name: 'Freshsales', category: 'crm', enabled: true, logo: 'FS', description: 'Modern CRM for sales teams.', features: ['Leads', 'Contacts', 'Deals', 'Accounts'] },
+			{ id: 58, name: 'Close', category: 'crm', enabled: false, logo: 'CL', description: 'Inside sales CRM with built-in communication.', features: ['Leads', 'Contacts', 'Opportunities', 'Calls'] },
+			{ id: 59, name: 'Copper', category: 'crm', enabled: true, logo: 'CP', description: 'Google Workspace native CRM solution.', features: ['People', 'Companies', 'Opportunities', 'Tasks'] },
+			{ id: 60, name: 'Microsoft Excel', category: 'productivity', enabled: false, logo: 'EX', description: 'Spreadsheet application and data analysis.', features: ['Workbooks', 'Worksheets', 'Charts', 'Tables'] },
+			{ id: 61, name: 'Google Calendar', category: 'productivity', enabled: true, logo: 'GC', description: 'Calendar and event management.', features: ['Events', 'Calendars', 'Attendees', 'Reminders'] },
+			{ id: 62, name: 'Outlook', category: 'email', enabled: false, logo: 'OL', description: 'Microsoft email and calendar client.', features: ['Messages', 'Calendar', 'Contacts', 'Tasks'] },
+			{ id: 63, name: 'Todoist', category: 'productivity', enabled: true, logo: 'TD', description: 'Task management and productivity app.', features: ['Tasks', 'Projects', 'Labels', 'Filters'] },
+			{ id: 64, name: 'Evernote', category: 'productivity', enabled: false, logo: 'EN', description: 'Note-taking and organization app.', features: ['Notes', 'Notebooks', 'Tags', 'Reminders'] },
+			{ id: 65, name: 'OneNote', category: 'productivity', enabled: true, logo: 'ON', description: 'Microsoft digital note-taking app.', features: ['Notebooks', 'Sections', 'Pages', 'Tags'] },
+			{ id: 66, name: 'ClickUp', category: 'productivity', enabled: false, logo: 'CU', description: 'All-in-one productivity and project management.', features: ['Tasks', 'Spaces', 'Goals', 'Docs'] },
+			{ id: 67, name: 'Basecamp', category: 'productivity', enabled: true, logo: 'BC', description: 'Project management and team collaboration.', features: ['Projects', 'To-dos', 'Messages', 'Files'] },
+			{ id: 68, name: 'Wrike', category: 'productivity', enabled: false, logo: 'WR', description: 'Work management and collaboration platform.', features: ['Tasks', 'Projects', 'Folders', 'Reports'] },
+			{ id: 69, name: 'Smartsheet', category: 'productivity', enabled: true, logo: 'SS', description: 'Work execution platform and collaboration.', features: ['Sheets', 'Reports', 'Dashboards', 'Forms'] },
+			{ id: 70, name: 'Linear', category: 'productivity', enabled: false, logo: 'LN', description: 'Issue tracking for modern software teams.', features: ['Issues', 'Projects', 'Teams', 'Cycles'] },
+			{ id: 71, name: 'Height', category: 'productivity', enabled: true, logo: 'HT', description: 'Autonomous project management tool.', features: ['Tasks', 'Projects', 'Workflows', 'Reports'] },
+			{ id: 72, name: 'Figma', category: 'design', enabled: false, logo: 'FG', description: 'Collaborative design and prototyping tool.', features: ['Files', 'Projects', 'Teams', 'Comments'] },
+			{ id: 73, name: 'Adobe Creative Cloud', category: 'design', enabled: true, logo: 'CC', description: 'Creative software suite and asset management.', features: ['Assets', 'Libraries', 'Projects', 'Users'] },
+			{ id: 74, name: 'Sketch', category: 'design', enabled: false, logo: 'SK', description: 'Digital design toolkit for UI/UX.', features: ['Documents', 'Symbols', 'Libraries', 'Prototypes'] },
+			{ id: 75, name: 'InVision', category: 'design', enabled: true, logo: 'IV', description: 'Design collaboration and prototyping.', features: ['Prototypes', 'Boards', 'Projects', 'Comments'] },
+			{ id: 76, name: 'Canva', category: 'design', enabled: false, logo: 'CV', description: 'Graphic design and visual content creation.', features: ['Designs', 'Templates', 'Teams', 'Folders'] },
+			{ id: 77, name: 'Loom', category: 'communication', enabled: true, logo: 'LM', description: 'Video messaging and screen recording.', features: ['Videos', 'Workspaces', 'Comments', 'Analytics'] },
+			{ id: 78, name: 'Calendly', category: 'productivity', enabled: false, logo: 'CY', description: 'Meeting scheduling and calendar automation.', features: ['Events', 'Invitees', 'Payments', 'Webhooks'] },
+			{ id: 79, name: 'Acuity Scheduling', category: 'productivity', enabled: true, logo: 'AS', description: 'Online appointment scheduling software.', features: ['Appointments', 'Clients', 'Services', 'Packages'] },
+			{ id: 80, name: 'DocuSign', category: 'productivity', enabled: false, logo: 'DS', description: 'Electronic signature and document management.', features: ['Envelopes', 'Templates', 'Recipients', 'Documents'] },
+			{ id: 81, name: 'HelloSign', category: 'productivity', enabled: true, logo: 'HS', description: 'Digital signature and document workflows.', features: ['Signatures', 'Templates', 'Teams', 'API'] },
+			{ id: 82, name: 'PandaDoc', category: 'productivity', enabled: false, logo: 'PD', description: 'Document automation and e-signature.', features: ['Documents', 'Templates', 'Recipients', 'Analytics'] },
+			{ id: 83, name: 'Typeform', category: 'forms', enabled: true, logo: 'TF', description: 'Interactive forms and survey builder.', features: ['Forms', 'Responses', 'Logic', 'Integrations'] },
+			{ id: 84, name: 'Google Forms', category: 'forms', enabled: false, logo: 'GF', description: 'Simple form creation and response collection.', features: ['Forms', 'Responses', 'Questions', 'Settings'] },
+			{ id: 85, name: 'JotForm', category: 'forms', enabled: true, logo: 'JF', description: 'Online form builder and data collection.', features: ['Forms', 'Submissions', 'Tables', 'Reports'] },
+			{ id: 86, name: 'Wufoo', category: 'forms', enabled: false, logo: 'WF', description: 'Web form builder and data management.', features: ['Forms', 'Entries', 'Reports', 'Payments'] },
+			{ id: 87, name: 'SurveyMonkey', category: 'forms', enabled: true, logo: 'SM', description: 'Online survey and questionnaire platform.', features: ['Surveys', 'Responses', 'Analysis', 'Benchmarks'] },
+			{ id: 88, name: 'Qualtrics', category: 'forms', enabled: false, logo: 'QL', description: 'Experience management and survey platform.', features: ['Surveys', 'Responses', 'Reports', 'Distributions'] },
+			{ id: 89, name: 'Webflow', category: 'development', enabled: true, logo: 'WF', description: 'Visual web design and development platform.', features: ['Sites', 'Collections', 'Forms', 'E-commerce'] },
+			{ id: 90, name: 'WordPress', category: 'development', enabled: false, logo: 'WP', description: 'Content management system and website builder.', features: ['Posts', 'Pages', 'Users', 'Media'] },
+			{ id: 91, name: 'Squarespace', category: 'development', enabled: true, logo: 'SQ', description: 'Website builder and hosting platform.', features: ['Pages', 'Collections', 'Commerce', 'Analytics'] },
+			{ id: 92, name: 'Wix', category: 'development', enabled: false, logo: 'WX', description: 'Website builder with drag-and-drop editor.', features: ['Sites', 'Pages', 'Collections', 'Apps'] },
+			{ id: 93, name: 'Heroku', category: 'development', enabled: true, logo: 'HK', description: 'Cloud platform for app deployment.', features: ['Apps', 'Dynos', 'Add-ons', 'Releases'] },
+			{ id: 94, name: 'Netlify', category: 'development', enabled: false, logo: 'NL', description: 'Web development platform and hosting.', features: ['Sites', 'Deploys', 'Forms', 'Functions'] },
+			{ id: 95, name: 'Vercel', category: 'development', enabled: true, logo: 'VC', description: 'Frontend deployment and serverless functions.', features: ['Projects', 'Deployments', 'Domains', 'Analytics'] },
+			{ id: 96, name: 'Firebase', category: 'development', enabled: false, logo: 'FB', description: 'Google mobile and web development platform.', features: ['Projects', 'Authentication', 'Database', 'Storage'] },
+			{ id: 97, name: 'Supabase', category: 'development', enabled: true, logo: 'SP', description: 'Open source Firebase alternative.', features: ['Projects', 'Tables', 'Auth', 'Storage'] },
+			{ id: 98, name: 'MongoDB Atlas', category: 'database', enabled: false, logo: 'MA', description: 'Cloud-based MongoDB database service.', features: ['Clusters', 'Databases', 'Collections', 'Users'] },
+			{ id: 99, name: 'MySQL', category: 'database', enabled: true, logo: 'MY', description: 'Relational database management system.', features: ['Databases', 'Tables', 'Users', 'Queries'] },
+			{ id: 100, name: 'PostgreSQL', category: 'database', enabled: false, logo: 'PG', description: 'Advanced open source relational database.', features: ['Databases', 'Tables', 'Users', 'Functions'] },
+			{ id: 101, name: 'Redis', category: 'database', enabled: true, logo: 'RD', description: 'In-memory data structure store.', features: ['Keys', 'Commands', 'Pub/Sub', 'Streams'] },
+			{ id: 102, name: 'Elasticsearch', category: 'database', enabled: false, logo: 'ES', description: 'Search and analytics engine.', features: ['Indices', 'Documents', 'Queries', 'Aggregations'] },
+			{ id: 103, name: 'Snowflake', category: 'database', enabled: true, logo: 'SF', description: 'Cloud data platform and warehouse.', features: ['Warehouses', 'Databases', 'Tables', 'Queries'] },
+			{ id: 104, name: 'BigQuery', category: 'database', enabled: false, logo: 'BQ', description: 'Google Cloud data warehouse.', features: ['Datasets', 'Tables', 'Jobs', 'Models'] },
+			{ id: 105, name: 'Databricks', category: 'analytics', enabled: true, logo: 'DB', description: 'Unified analytics platform for big data.', features: ['Clusters', 'Notebooks', 'Jobs', 'Models'] },
+			{ id: 106, name: 'Datadog', category: 'monitoring', enabled: false, logo: 'DD', description: 'Monitoring and security platform.', features: ['Metrics', 'Logs', 'Traces', 'Dashboards'] },
+			{ id: 107, name: 'New Relic', category: 'monitoring', enabled: true, logo: 'NR', description: 'Application performance monitoring.', features: ['Applications', 'Alerts', 'Dashboards', 'Insights'] },
+			{ id: 108, name: 'Sentry', category: 'monitoring', enabled: false, logo: 'SE', description: 'Error tracking and performance monitoring.', features: ['Projects', 'Issues', 'Releases', 'Performance'] },
+			{ id: 109, name: 'LogRocket', category: 'monitoring', enabled: true, logo: 'LR', description: 'Frontend monitoring and session replay.', features: ['Sessions', 'Issues', 'Performance', 'Insights'] },
+			{ id: 110, name: 'Bugsnag', category: 'monitoring', enabled: false, logo: 'BS', description: 'Error monitoring and reporting.', features: ['Errors', 'Releases', 'Users', 'Stability'] },
+			{ id: 111, name: 'PagerDuty', category: 'monitoring', enabled: true, logo: 'PD', description: 'Digital operations management platform.', features: ['Incidents', 'Services', 'Schedules', 'Escalations'] },
+			{ id: 112, name: 'Statuspage', category: 'monitoring', enabled: false, logo: 'SP', description: 'Status page and incident communication.', features: ['Pages', 'Components', 'Incidents', 'Subscribers'] },
+			{ id: 113, name: 'UptimeRobot', category: 'monitoring', enabled: true, logo: 'UR', description: 'Website monitoring and uptime tracking.', features: ['Monitors', 'Alerts', 'Statistics', 'Status Pages'] },
+			{ id: 114, name: 'Pingdom', category: 'monitoring', enabled: false, logo: 'PM', description: 'Website performance and uptime monitoring.', features: ['Checks', 'Reports', 'Alerts', 'RUM'] },
+			{ id: 115, name: 'Zapier', category: 'automation', enabled: true, logo: 'ZP', description: 'Workflow automation and app integration.', features: ['Zaps', 'Triggers', 'Actions', 'Filters'] },
+			{ id: 116, name: 'Make', category: 'automation', enabled: false, logo: 'MK', description: 'Visual platform for workflow automation.', features: ['Scenarios', 'Modules', 'Webhooks', 'Data Stores'] },
+			{ id: 117, name: 'IFTTT', category: 'automation', enabled: true, logo: 'IF', description: 'Simple automation for everyday tasks.', features: ['Applets', 'Triggers', 'Actions', 'Queries'] },
+			{ id: 118, name: 'Microsoft Flow', category: 'automation', enabled: false, logo: 'MF', description: 'Workflow automation across Microsoft apps.', features: ['Flows', 'Triggers', 'Actions', 'Approvals'] },
+			{ id: 119, name: 'Workato', category: 'automation', enabled: true, logo: 'WO', description: 'Enterprise automation and integration.', features: ['Recipes', 'Connections', 'Jobs', 'Reports'] },
+			{ id: 120, name: 'Tray.io', category: 'automation', enabled: false, logo: 'TR', description: 'General automation platform for enterprises.', features: ['Workflows', 'Connectors', 'Solutions', 'Operations'] },
+			{ id: 121, name: 'Retool', category: 'development', enabled: true, logo: 'RT', description: 'Low-code platform for internal tools.', features: ['Apps', 'Queries', 'Components', 'Resources'] },
+			{ id: 122, name: 'Bubble', category: 'development', enabled: false, logo: 'BB', description: 'No-code web application builder.', features: ['Apps', 'Data Types', 'Workflows', 'Plugins'] },
+			{ id: 123, name: 'Adalo', category: 'development', enabled: true, logo: 'AD', description: 'No-code mobile app development.', features: ['Apps', 'Screens', 'Components', 'Actions'] },
+			{ id: 124, name: 'Glide', category: 'development', enabled: false, logo: 'GL', description: 'No-code app builder from spreadsheets.', features: ['Apps', 'Tables', 'Components', 'Actions'] },
+			{ id: 125, name: 'AppSheet', category: 'development', enabled: true, logo: 'AP', description: 'Google no-code app development platform.', features: ['Apps', 'Data', 'Views', 'Workflows'] },
+			{ id: 126, name: 'Outsystems', category: 'development', enabled: false, logo: 'OS', description: 'Low-code application development platform.', features: ['Applications', 'Modules', 'Entities', 'Processes'] },
+			{ id: 127, name: 'Mendix', category: 'development', enabled: true, logo: 'MX', description: 'Low-code application development platform.', features: ['Apps', 'Domain Models', 'Pages', 'Microflows'] },
+			{ id: 128, name: 'PowerApps', category: 'development', enabled: false, logo: 'PA', description: 'Microsoft low-code application platform.', features: ['Apps', 'Data Sources', 'Flows', 'Solutions'] },
+			{ id: 129, name: 'Quickbase', category: 'database', enabled: true, logo: 'QB', description: 'Low-code database and application platform.', features: ['Apps', 'Tables', 'Reports', 'Dashboards'] },
+			{ id: 130, name: 'Caspio', category: 'database', enabled: false, logo: 'CS', description: 'Cloud database and low-code platform.', features: ['Apps', 'Tables', 'Views', 'Tasks'] },
+			{ id: 131, name: 'Knack', category: 'database', enabled: true, logo: 'KN', description: 'Online database and application builder.', features: ['Objects', 'Pages', 'Users', 'Reports'] },
+			{ id: 132, name: 'Zoho Creator', category: 'development', enabled: false, logo: 'ZR', description: 'Low-code application development platform.', features: ['Applications', 'Forms', 'Reports', 'Workflows'] },
+			{ id: 133, name: 'Podio', category: 'productivity', enabled: true, logo: 'PO', description: 'Customizable work management platform.', features: ['Apps', 'Items', 'Tasks', 'Workflows'] },
+			{ id: 134, name: 'Coda', category: 'productivity', enabled: false, logo: 'CD', description: 'All-in-one doc for teams and productivity.', features: ['Docs', 'Tables', 'Automations', 'Packs'] },
+			{ id: 135, name: 'Miro', category: 'collaboration', enabled: true, logo: 'MR', description: 'Online collaborative whiteboard platform.', features: ['Boards', 'Frames', 'Widgets', 'Templates'] },
+			{ id: 136, name: 'Mural', category: 'collaboration', enabled: false, logo: 'ML', description: 'Digital workspace for visual collaboration.', features: ['Murals', 'Templates', 'Facilitation', 'Analytics'] },
+			{ id: 137, name: 'Lucidchart', category: 'collaboration', enabled: true, logo: 'LC', description: 'Diagramming and visual communication.', features: ['Documents', 'Shapes', 'Templates', 'Collaboration'] },
+			{ id: 138, name: 'Draw.io', category: 'collaboration', enabled: false, logo: 'DI', description: 'Free online diagram software.', features: ['Diagrams', 'Libraries', 'Templates', 'Sharing'] },
+			{ id: 139, name: 'Whimsical', category: 'collaboration', enabled: true, logo: 'WH', description: 'Visual workspace for thinking and planning.', features: ['Flowcharts', 'Wireframes', 'Mind Maps', 'Projects'] },
+			{ id: 140, name: 'Creately', category: 'collaboration', enabled: false, logo: 'CR', description: 'Visual collaboration and diagramming.', features: ['Diagrams', 'Workspaces', 'Templates', 'Data'] },
+			{ id: 141, name: 'Confluent', category: 'development', enabled: true, logo: 'CF', description: 'Apache Kafka cloud platform.', features: ['Clusters', 'Topics', 'Connectors', 'ksqlDB'] },
+			{ id: 142, name: 'RabbitMQ', category: 'development', enabled: false, logo: 'RQ', description: 'Message broker and queue system.', features: ['Queues', 'Exchanges', 'Bindings', 'Messages'] },
+			{ id: 143, name: 'Apache Airflow', category: 'development', enabled: true, logo: 'AF', description: 'Workflow orchestration and scheduling.', features: ['DAGs', 'Tasks', 'Connections', 'Variables'] },
+			{ id: 144, name: 'Prefect', category: 'development', enabled: false, logo: 'PF', description: 'Modern workflow orchestration platform.', features: ['Flows', 'Tasks', 'Deployments', 'Agents'] },
+			{ id: 145, name: 'Temporal', category: 'development', enabled: true, logo: 'TP', description: 'Durable workflow execution platform.', features: ['Workflows', 'Activities', 'Namespaces', 'Task Queues'] },
+			{ id: 146, name: 'Kubernetes', category: 'development', enabled: false, logo: 'K8', description: 'Container orchestration platform.', features: ['Pods', 'Services', 'Deployments', 'ConfigMaps'] },
+			{ id: 147, name: 'Docker', category: 'development', enabled: true, logo: 'DK', description: 'Containerization and deployment platform.', features: ['Images', 'Containers', 'Volumes', 'Networks'] },
+			{ id: 148, name: 'Terraform', category: 'development', enabled: false, logo: 'TF', description: 'Infrastructure as code and provisioning.', features: ['Resources', 'Modules', 'State', 'Providers'] },
+			{ id: 149, name: 'Ansible', category: 'development', enabled: true, logo: 'AN', description: 'IT automation and configuration management.', features: ['Playbooks', 'Inventory', 'Modules', 'Roles'] },
+			{ id: 150, name: 'Jenkins', category: 'development', enabled: false, logo: 'JK', description: 'Open source automation server for CI/CD.', features: ['Jobs', 'Builds', 'Plugins', 'Pipelines'] }
+		];
+
+        const customerConfigurations = {
+            'acme-corp': {
+                name: 'ACME Corporation',
+                tenantId: 'acme-corp-2024',
+                plan: 'Enterprise',
+                enabledIntegrations: [1, 2, 4, 5, 7, 9, 11, 13, 15]
+            },
+            'tech-startup': {
+                name: 'TechStartup Inc.',
+                tenantId: 'tech-startup-2024',
+                plan: 'Professional',
+                enabledIntegrations: [1, 3, 4, 6, 8, 9, 14, 16]
+            },
+            'retail-giant': {
+                name: 'Retail Giant LLC',
+                tenantId: 'retail-giant-2024',
+                plan: 'Enterprise Plus',
+                enabledIntegrations: [2, 3, 5, 7, 10, 11, 12, 15]
+            },
+            'consulting-firm': {
+                name: 'Consulting Firm Pro',
+                tenantId: 'consulting-firm-2024',
+                plan: 'Professional',
+                enabledIntegrations: [1, 4, 6, 8, 9, 13, 14, 16]
+            }
+        };
+
+        let currentCustomer = 'acme-corp';
+        let integrations = [];
+
+        let currentPage = 1;
+        function loadCustomerData(customerId) {
+            currentCustomer = customerId;
+            const customerConfig = customerConfigurations[customerId];
+            
+            // Create integrations array for the selected customer
+            integrations = masterIntegrations.map(integration => ({
+                ...integration,
+                enabled: customerConfig.enabledIntegrations.includes(integration.id)
+            }));
+            
+            // Update customer info in header
+            const customerInfo = document.querySelector('.customer-info');
+            customerInfo.innerHTML = `
+                <div>Tenant ID: ${customerConfig.tenantId}</div>
+                <div>Plan: ${customerConfig.plan}</div>
+            `;
+            
+            // Reset filters and pagination
+            currentPage = 1;
+            document.getElementById('search-input').value = '';
+            document.getElementById('category-filter').value = '';
+            document.getElementById('status-filter').value = '';
+            
+            filterIntegrations();
+        }
+
+        function renderIntegrations() {
+            const grid = document.getElementById('integrations-grid');
+            const itemsPerPage = 12;
+            const startIndex = (currentPage - 1) * itemsPerPage;
+            const endIndex = startIndex + itemsPerPage;
+            const pageIntegrations = filteredIntegrations.slice(startIndex, endIndex);
+
+            grid.innerHTML = pageIntegrations.map(integration => `
+                <div class="integration-card ${integration.enabled ? 'enabled' : 'disabled'}">
+                    <div class="integration-header">
+                        <div class="integration-info">
+                            <h3>
+                                <div class="integration-logo">${integration.logo}</div>
+                                ${integration.name}
+                            </h3>
+                            <div class="integration-category">${integration.category.toUpperCase()}</div>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" ${integration.enabled ? 'checked' : ''} 
+                                   onchange="toggleIntegration(${integration.id})">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <div class="integration-details">
+                        <p>${integration.description}</p>
+                        <div class="feature-tags">
+                            ${integration.features.map(feature => `<span class="tag">${feature}</span>`).join('')}
+                        </div>
+                    </div>
+                    <div class="integration-actions">
+                        <span class="status-badge status-${integration.enabled ? 'enabled' : 'disabled'}">
+                            ${integration.enabled ? 'Active' : 'Inactive'}
+                        </span>
+                        <button class="btn btn-secondary btn-small" onclick="configureIntegration(${integration.id})">
+                            Configure
+                        </button>
+                        <button class="btn btn-secondary btn-small" onclick="viewLogs(${integration.id})">
+                            Logs
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+
+            updateStats();
+        }
+
+        function toggleIntegration(id) {
+            const integration = integrations.find(i => i.id === id);
+            if (integration) {
+                integration.enabled = !integration.enabled;
+                
+                // Update the customer configuration
+                const customerConfig = customerConfigurations[currentCustomer];
+                if (integration.enabled) {
+                    if (!customerConfig.enabledIntegrations.includes(id)) {
+                        customerConfig.enabledIntegrations.push(id);
+                    }
+                } else {
+                    customerConfig.enabledIntegrations = customerConfig.enabledIntegrations.filter(integrationId => integrationId !== id);
+                }
+                
+                // Simulate API call
+                setTimeout(() => {
+                    renderIntegrations();
+                    showNotification(`${integration.name} ${integration.enabled ? 'enabled' : 'disabled'} for ${customerConfigurations[currentCustomer].name}!`);
+                }, 300);
+            }
+        }
+
+        function filterIntegrations() {
+            const searchTerm = document.getElementById('search-input').value.toLowerCase();
+            const categoryFilter = document.getElementById('category-filter').value;
+            const statusFilter = document.getElementById('status-filter').value;
+
+            filteredIntegrations = integrations.filter(integration => {
+                const matchesSearch = integration.name.toLowerCase().includes(searchTerm) || 
+                                    integration.description.toLowerCase().includes(searchTerm);
+                const matchesCategory = !categoryFilter || integration.category === categoryFilter;
+                const matchesStatus = !statusFilter || 
+                                    (statusFilter === 'enabled' && integration.enabled) ||
+                                    (statusFilter === 'disabled' && !integration.enabled);
+                
+                return matchesSearch && matchesCategory && matchesStatus;
+            });
+
+            currentPage = 1;
+            renderIntegrations();
+            renderPagination();
+        }
+
+        function updateStats() {
+            const enabled = integrations.filter(i => i.enabled).length;
+            const disabled = integrations.filter(i => !i.enabled).length;
+            
+            document.getElementById('enabled-count').textContent = enabled;
+            document.getElementById('disabled-count').textContent = disabled;
+        }
+
+        function switchCustomer() {
+            const select = document.getElementById('customer-select');
+            const selectedCustomerId = select.value;
+            const selectedCustomerName = select.options[select.selectedIndex].text;
+            
+            loadCustomerData(selectedCustomerId);
+            showNotification(`Switched to ${selectedCustomerName}`);
+        }
+
+        function configureIntegration(id) {
+            const integration = integrations.find(i => i.id === id);
+            showNotification(`Opening configuration for ${integration.name}`);
+        }
+
+        function viewLogs(id) {
+            const integration = integrations.find(i => i.id === id);
+            showNotification(`Viewing logs for ${integration.name}`);
+        }
+
+        function changePage(direction) {
+            const itemsPerPage = 12;
+            const maxPages = Math.ceil(filteredIntegrations.length / itemsPerPage);
+            
+            if (direction === 'prev') {
+                currentPage = Math.max(1, currentPage - 1);
+            } else if (direction === 'next') {
+                currentPage = Math.min(maxPages, currentPage + 1);
+            } else if (typeof direction === 'number') {
+                currentPage = direction;
+            }
+            
+            renderIntegrations();
+            renderPagination();
+        }
+
+        function renderPagination() {
+            const itemsPerPage = 12;
+            const maxPages = Math.ceil(filteredIntegrations.length / itemsPerPage);
+            const pagination = document.getElementById('pagination');
+            
+            let paginationHTML = '';
+            
+            // Previous button
+            paginationHTML += `<button onclick="changePage('prev')" ${currentPage === 1 ? 'disabled' : ''}>← Previous</button>`;
+            
+            // Page numbers
+            let startPage = Math.max(1, currentPage - 2);
+            let endPage = Math.min(maxPages, startPage + 4);
+            
+            // Adjust start if we're near the end
+            if (endPage - startPage < 4) {
+                startPage = Math.max(1, endPage - 4);
+            }
+            
+            // Show first page if not in range
+            if (startPage > 1) {
+                paginationHTML += `<button onclick="changePage(1)">1</button>`;
+                if (startPage > 2) {
+                    paginationHTML += `<span style="padding: 10px;">...</span>`;
+                }
+            }
+            
+            // Show page numbers in range
+            for (let i = startPage; i <= endPage; i++) {
+                paginationHTML += `<button onclick="changePage(${i})" ${i === currentPage ? 'class="active"' : ''}>${i}</button>`;
+            }
+            
+            // Show last page if not in range
+            if (endPage < maxPages) {
+                if (endPage < maxPages - 1) {
+                    paginationHTML += `<span style="padding: 10px;">...</span>`;
+                }
+                paginationHTML += `<button onclick="changePage(${maxPages})">${maxPages}</button>`;
+            }
+            
+            // Next button
+            paginationHTML += `<button onclick="changePage('next')" ${currentPage === maxPages ? 'disabled' : ''}>Next →</button>`;
+            
+            pagination.innerHTML = paginationHTML;
+        }
+
+        function showNotification(message) {
+            // Create a simple notification
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: linear-gradient(135deg, #667eea, #764ba2);
+                color: white;
+                padding: 15px 25px;
+                border-radius: 12px;
+                z-index: 1000;
+                animation: slideIn 0.3s ease;
+            `;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+
+        // Initialize the page
+        loadCustomerData(currentCustomer);
+    </script>
+
+    <style>
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+    </style>
+</body>
+</html>
+</html>
